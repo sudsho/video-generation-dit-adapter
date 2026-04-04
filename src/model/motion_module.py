@@ -42,19 +42,15 @@ class TemporalAttentionBlock(nn.Module):
         self.scale = head_dim ** -0.5
 
         self.norm = nn.LayerNorm(channels)
-        self.to_q = nn.Linear(channels, inner, bias=False)
-        self.to_k = nn.Linear(channels, inner, bias=False)
-        self.to_v = nn.Linear(channels, inner, bias=False)
+        self.to_qkv = nn.Linear(channels, inner * 3, bias=False)
         self.to_out = nn.Sequential(nn.Linear(inner, channels), nn.Dropout(dropout))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (N, T, C)
         residual = x
         x = self.norm(x)
-        q = self.to_q(x)
-        k = self.to_k(x)
-        v = self.to_v(x)
-        q, k, v = (rearrange(t, "n t (h d) -> n h t d", h=self.heads) for t in (q, k, v))
+        qkv = self.to_qkv(x).chunk(3, dim=-1)
+        q, k, v = (rearrange(t, "n t (h d) -> n h t d", h=self.heads) for t in qkv)
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
         out = attn @ v
