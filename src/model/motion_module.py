@@ -51,9 +51,13 @@ class TemporalAttentionBlock(nn.Module):
         x = self.norm(x)
         qkv = self.to_qkv(x).chunk(3, dim=-1)
         q, k, v = (rearrange(t, "n t (h d) -> n h t d", h=self.heads) for t in qkv)
-        attn = (q @ k.transpose(-2, -1)) * self.scale
-        attn = attn.softmax(dim=-1)
-        out = attn @ v
+        # prefer sdpa when available (calls into xformers/flash under the hood)
+        if hasattr(F, "scaled_dot_product_attention"):
+            out = F.scaled_dot_product_attention(q, k, v)
+        else:
+            attn = (q @ k.transpose(-2, -1)) * self.scale
+            attn = attn.softmax(dim=-1)
+            out = attn @ v
         out = rearrange(out, "n h t d -> n t (h d)")
         return self.to_out(out) + residual
 
