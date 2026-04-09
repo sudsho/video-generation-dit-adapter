@@ -18,6 +18,12 @@ import torch.nn.functional as F
 import yaml
 from torch.utils.data import DataLoader
 
+try:
+    import wandb  # noqa: F401
+    _WANDB = True
+except Exception:
+    _WANDB = False
+
 from src.data import WebVidSubset, collate_video_batch, ColorJitterVideo
 from src.model import IntegratedT2VPipe
 
@@ -96,6 +102,10 @@ def train(cfg_path: str, out_dir: str, resume: str | None = None):
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
+    if _WANDB and cfg["logging"].get("project"):
+        import wandb
+        wandb.init(project=cfg["logging"]["project"], entity=cfg["logging"].get("entity"), config=cfg)
+
     step = start_step
     grad_accum = cfg["train"]["grad_accum"]
     max_steps = cfg["train"]["max_steps"]
@@ -156,6 +166,11 @@ def train(cfg_path: str, out_dir: str, resume: str | None = None):
             if step % 25 == 0:
                 elapsed = time.time() - t_start
                 print(f"step {step} loss {loss.item()*grad_accum:.4f} lr {opt.param_groups[0]['lr']:.2e} elapsed {elapsed:.0f}s")
+                if _WANDB and cfg["logging"].get("project"):
+                    import wandb
+                    wandb.log(
+                        {"loss": loss.item() * grad_accum, "lr": opt.param_groups[0]["lr"], "step": step}
+                    )
 
             if step > 0 and step % save_every == 0:
                 torch.save(
