@@ -121,7 +121,8 @@ def train(cfg_path: str, out_dir: str, resume: str | None = None):
             videos = batch["video"]  # (B, F, C, H, W)
             captions = batch["caption"]
 
-            latents = encode_videos_to_latents(pipe, videos)
+            with torch.cuda.amp.autocast(dtype=torch.bfloat16, enabled=cfg["train"]["mixed_precision"] == "bf16"):
+                latents = encode_videos_to_latents(pipe, videos)
             b, f, lc, lh, lw = latents.shape
             noise = torch.randn_like(latents)
             timesteps = torch.randint(
