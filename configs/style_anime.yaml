@@ -1,0 +1,13 @@
+# anime-style LoRA distillation
+style_name: anime
+data:
+  manifest: data/styles/anime/manifest.csv
+lora:
+  r: 16
+  alpha: 32
+  target_modules: ["to_q", "to_k", "to_v", "to_out.0"]
+train:
+  batch_size: 2
+  lr: 1.0e-4
+  warmup_steps: 200
+  max_steps: 4000

@@ -1,0 +1,16 @@
+# shared distillation defaults, imported by style-specific configs
+lora:
+  r: 16
+  alpha: 32
+  target_modules: ["to_q", "to_k", "to_v", "to_out.0"]
+  dropout: 0.0
+distill:
+  teacher_motion_scale: 1.0
+  distill_weight: 1.0
+  match_loss: mse
+train:
+  batch_size: 2
+  lr: 1.0e-4
+  warmup_steps: 200
+  max_steps: 4000
+  clip_grad_norm: 1.0

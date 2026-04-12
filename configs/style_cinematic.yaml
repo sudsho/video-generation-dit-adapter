@@ -1,0 +1,13 @@
+# cinematic-look LoRA distillation
+style_name: cinematic
+data:
+  manifest: data/styles/cinematic/manifest.csv
+lora:
+  r: 8
+  alpha: 16
+  target_modules: ["to_q", "to_k", "to_v", "to_out.0"]
+train:
+  batch_size: 2
+  lr: 8.0e-5
+  warmup_steps: 200
+  max_steps: 3000
