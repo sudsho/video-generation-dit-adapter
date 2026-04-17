@@ -100,6 +100,10 @@ class MotionModule(nn.Module):
         # zero-init the last projection (identity at start of training)
         nn.init.zeros_(self.ffn[-1].weight)
         nn.init.zeros_(self.ffn[-1].bias)
+        # zero-init attention output projection too, matches animatediff init
+        for blk in self.blocks:
+            nn.init.zeros_(blk.to_out[0].weight)
+            nn.init.zeros_(blk.to_out[0].bias)
 
     def forward(self, x: torch.Tensor, num_frames: int, motion_scale: float = 1.0) -> torch.Tensor:
         # x is expected as (B*F, C, H, W)

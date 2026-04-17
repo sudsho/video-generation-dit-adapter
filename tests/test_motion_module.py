@@ -28,14 +28,9 @@ def test_motion_module_forward_shape():
 
 
 def test_motion_module_identity_at_init():
-    """Zero-init FFN + attention residual means output should be x + small delta.
-    We check the residual math: at init, ffn contributes zero exactly."""
+    """Zero-init FFN + zero-init attention out mean the module is identity."""
     b, f, c, h, w = 1, 4, 16, 4, 4
     m = MotionModule(channels=c, num_layers=1, heads=2, head_dim=8, max_frames=8)
-    # zero the attention output too so we can assert bitwise-identity
-    for blk in m.blocks:
-        for p in blk.to_out[0].parameters():
-            torch.nn.init.zeros_(p)
     x = torch.randn(b * f, c, h, w)
     y = m(x, num_frames=f, motion_scale=1.0)
     assert torch.allclose(y, x, atol=1e-6)
