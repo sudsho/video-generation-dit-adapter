@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    image: video-motion-adapter:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - CONFIG_PATH=/app/configs/base.yaml
+      - MOTION_CKPT=/app/runs/motion/motion_final.pt
+      - OUT_DIR=/app/out
+      - WARMUP=1
+    volumes:
+      - ./runs:/app/runs:ro
+      - ./out:/app/out
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  streamlit:
+    build: .
+    image: video-motion-adapter:latest
+    command: ["streamlit", "run", "streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./runs:/app/runs:ro
+      - ./out:/app/out
+    depends_on:
+      - api
