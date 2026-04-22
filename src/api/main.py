@@ -68,6 +68,16 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/info")
+def info():
+    return {
+        "backbone": "stabilityai/stable-diffusion-3-turbo",
+        "resolution": 512,
+        "max_duration_s": 8.0,
+        "styles": ["anime", "cinematic"],
+    }
+
+
 @app.post("/generate", response_model=GenerateResponse)
 def generate(req: GenerateRequest):
     from src.model import GenerationConfig
