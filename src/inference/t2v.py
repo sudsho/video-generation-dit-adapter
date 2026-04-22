@@ -46,6 +46,10 @@ def _build_pipe(base_cfg: dict, motion_ckpt: str) -> IntegratedT2VPipe:
 
 def write_mp4(frames: np.ndarray, out_path: str, fps: int = 12) -> None:
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    ext = os.path.splitext(out_path)[1].lower()
+    if ext == ".gif":
+        imageio.mimsave(out_path, list(frames), duration=1.0 / fps)
+        return
     with imageio.get_writer(out_path, fps=fps, codec="libx264", quality=8) as w:
         for f in frames:
             w.append_data(f)
