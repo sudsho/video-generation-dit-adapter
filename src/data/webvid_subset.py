@@ -39,14 +39,18 @@ def read_manifest(manifest_csv: str) -> List[ClipRecord]:
     with open(manifest_csv, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for r in reader:
-            rows.append(
-                ClipRecord(
-                    path=r["video_path"],
-                    caption=r["caption"],
-                    start_sec=float(r.get("start_sec", 0.0)),
-                    end_sec=float(r.get("end_sec", 0.0)),
+            try:
+                rows.append(
+                    ClipRecord(
+                        path=r["video_path"],
+                        caption=r["caption"],
+                        start_sec=float(r.get("start_sec", 0.0) or 0.0),
+                        end_sec=float(r.get("end_sec", 0.0) or 0.0),
+                    )
                 )
-            )
+            except (KeyError, ValueError):
+                # skip malformed rows rather than blow up mid-training
+                continue
     return rows
 
 
