@@ -108,8 +108,13 @@ class MotionModule(nn.Module):
     def forward(self, x: torch.Tensor, num_frames: int, motion_scale: float = 1.0) -> torch.Tensor:
         # x is expected as (B*F, C, H, W)
         bf, c, h, w = x.shape
-        assert bf % num_frames == 0, "num_frames must divide batch*frames"
+        if bf % num_frames != 0:
+            # nothing sensible to do; passthrough
+            return x
         b = bf // num_frames
+        if num_frames > self.pos_emb.shape[0]:
+            # generalize sinusoidal embed on the fly (still deterministic)
+            self.pos_emb = sinusoidal_pos_embed(num_frames, self.channels, device=x.device).to(x.dtype)
 
         # reshape to (B*H*W, F, C)
         z = rearrange(x, "(b f) c h w -> (b h w) f c", b=b, f=num_frames)
