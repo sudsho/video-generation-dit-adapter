@@ -125,6 +125,7 @@ class MotionModule(nn.Module):
         for blk in self.blocks:
             z = blk(z)
 
+        # Pre-LN style FFN with residual; ffn is zero-init so identity at start.
         z = z + self.ffn(z)
 
         z = rearrange(z, "(b h w) f c -> (b f) c h w", b=b, h=h, w=w)
