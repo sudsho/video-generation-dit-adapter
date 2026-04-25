@@ -180,10 +180,15 @@ def train(cfg_path: str, out_dir: str, resume: str | None = None):
                     )
 
             if step > 0 and step % save_every == 0:
+                ckpt_path = out_path / f"motion_step{step:07d}.pt"
                 torch.save(
-                    {"motion": pipe.motion.state_dict(), "step": step},
-                    out_path / f"motion_step{step:07d}.pt",
+                    {"motion": pipe.motion.state_dict(), "step": step, "cfg": cfg},
+                    ckpt_path,
                 )
+                # keep only last 3 to save disk
+                ckpts = sorted(out_path.glob("motion_step*.pt"))
+                for old in ckpts[:-3]:
+                    old.unlink(missing_ok=True)
 
             step += 1
             if step >= max_steps:
