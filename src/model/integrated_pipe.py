@@ -71,10 +71,22 @@ class IntegratedT2VPipe:
         remove_hooks(self._hooks)
 
     def load_style_lora(self, path: str, adapter_name: str = "style", scale: float = 1.0):
-        """Delegates to diffusers' PEFT-backed LoRA loader on the transformer."""
+        """Delegates to diffusers' PEFT-backed LoRA loader on the transformer.
+        Safe to call multiple times with different adapter names.
+        """
+        if adapter_name in self._loras:
+            # already loaded, just adjust weight
+            self.pipe.set_adapters([adapter_name], adapter_weights=[scale])
+            return
         self.pipe.load_lora_weights(path, adapter_name=adapter_name)
         self.pipe.set_adapters([adapter_name], adapter_weights=[scale])
         self._loras.append(adapter_name)
+
+    def combine_loras(self, weights: dict[str, float]) -> None:
+        """Set weighted blend of multiple loaded LoRAs, e.g. {'anime':0.6,'cinematic':0.4}."""
+        names = list(weights.keys())
+        w = [weights[n] for n in names]
+        self.pipe.set_adapters(names, adapter_weights=w)
 
     def clear_loras(self):
         if self._loras and hasattr(self.pipe, "unload_lora_weights"):
