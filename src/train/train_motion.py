@@ -92,10 +92,16 @@ def train(cfg_path: str, out_dir: str, resume: str | None = None):
         drop_last=True,
     )
 
+    # split params: weight decay on 2D+ tensors only (matches nanoGPT convention)
+    decay, no_decay = [], []
+    for p in pipe.motion.parameters():
+        (decay if p.dim() >= 2 else no_decay).append(p)
     opt = torch.optim.AdamW(
-        pipe.motion.parameters(),
+        [
+            {"params": decay, "weight_decay": cfg["train"]["weight_decay"]},
+            {"params": no_decay, "weight_decay": 0.0},
+        ],
         lr=cfg["train"]["lr"],
-        weight_decay=cfg["train"]["weight_decay"],
     )
     scaler = torch.amp.GradScaler("cuda", enabled=(cfg["train"]["mixed_precision"] == "fp16"))
 
