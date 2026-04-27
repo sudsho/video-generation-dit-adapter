@@ -36,6 +36,21 @@ def test_motion_module_identity_at_init():
     assert torch.allclose(y, x, atol=1e-6)
 
 
+def test_motion_module_dtype_preserved():
+    b, f, c, h, w = 1, 4, 16, 4, 4
+    m = MotionModule(channels=c, num_layers=1, heads=2, head_dim=8, max_frames=8)
+    x = torch.randn(b * f, c, h, w, dtype=torch.float32)
+    assert m(x, num_frames=f).dtype == torch.float32
+
+
+def test_motion_module_generalizes_beyond_max_frames():
+    b, f, c, h, w = 1, 12, 16, 4, 4
+    m = MotionModule(channels=c, num_layers=1, heads=2, head_dim=8, max_frames=8)
+    x = torch.randn(b * f, c, h, w)
+    y = m(x, num_frames=f, motion_scale=1.0)
+    assert y.shape == x.shape
+
+
 def test_motion_scale_zero_is_identity():
     b, f, c, h, w = 1, 4, 16, 4, 4
     m = MotionModule(channels=c, num_layers=2, heads=2, head_dim=8, max_frames=8)
