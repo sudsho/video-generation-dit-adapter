@@ -40,6 +40,18 @@ class ColorJitterVideo:
         return x * 2 - 1
 
 
+class RandomHFlipVideo:
+    """Flip whole clip left-right with p=0.5."""
+
+    def __init__(self, p: float = 0.5):
+        self.p = p
+
+    def __call__(self, video: torch.Tensor) -> torch.Tensor:
+        if torch.rand(1).item() < self.p:
+            return torch.flip(video, dims=[-1])
+        return video
+
+
 class SpeedJitter:
     """Randomly resample frames with a speed factor in [1/max, max]."""
 
