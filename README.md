@@ -132,6 +132,22 @@ non-consensual content. See
 [docs/ethical_considerations_synth_video.md](docs/ethical_considerations_synth_video.md)
 for what to add before shipping this in a product.
 
+## Tests
+
+```bash
+pytest -q
+```
+
+Tests run without a GPU: the pipe test mocks the SD3-Turbo backbone, motion
+tests use tiny random tensors, metrics tests use random videos.
+
+## Roadmap
+
+- FP8 attention for the motion module (waiting on stable xformers FP8)
+- Longer clips (16 s) via chunked temporal attention with overlap
+- Style-motion joint training instead of frozen-motion + LoRA-only
+- ControlNet conditioning (pose, depth) as an optional extra channel
+
 ## License
 
 MIT.
