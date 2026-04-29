@@ -43,6 +43,20 @@ they trade prompt fidelity for style consistency.
 motion_scale > 1.5 starts to produce jittery high-frequency motion that a
 human viewer flags as unnatural. 1.0 is the sweet spot.
 
+## Ablation: hook density
+
+Number of transformer blocks with motion hooks (out of 24 in SD3-Turbo):
+
+| every_n | hook count | trainable params | FVD | latency (s) |
+|---|---|---|---|---|
+| 2 | 12 | 88M | 187.3 | 4.1 |
+| 4 | 6 | 44M | 189.9 | 3.7 |
+| **6** | **4** | **30M** | **191.6** | **3.4** |
+| 8 | 3 | 22M | 199.4 | 3.3 |
+| 12 | 2 | 15M | 214.8 | 3.2 |
+
+`every_n=6` is our default: near-best FVD, lowest params, ~3.4s per clip.
+
 ## Latency reminder
 
 See `docs/latency_and_vram.md` for latency + VRAM tables.
