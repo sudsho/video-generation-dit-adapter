@@ -62,6 +62,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="video-generation-dit-adapter", lifespan=lifespan)
 
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/health")
 def health():
