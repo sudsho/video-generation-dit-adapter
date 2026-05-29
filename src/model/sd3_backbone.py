@@ -1,9 +1,16 @@
 """
-SD3-Turbo backbone loader with hook points for the motion module.
+DRAFT backbone loader and hook installer.
 
-We freeze the DiT weights by default (only the motion adapter and optional
-LoRA style modules are trainable) and register forward hooks on selected
-transformer blocks so we can splice in the temporal attention pass.
+Loads a diffusers StableDiffusion3Pipeline by id (caller must supply a
+real, downloadable model id; `stabilityai/stable-diffusion-3-turbo` used
+as a default here is a placeholder that does NOT resolve on Hugging Face)
+and registers forward hooks on selected transformer blocks.
+
+Caveat on the hook: diffusers' SD3 JointTransformerBlock.forward returns
+`(encoder_hidden_states, hidden_states)` - i.e. `output[0]` is the TEXT
+stream, not the image residual stream. The hook below currently treats
+`output[0]` as the image stream, which is wrong for that specific block
+layout and needs to be reconciled against the actual pipeline before use.
 """
 from __future__ import annotations
 
@@ -26,7 +33,7 @@ class HookHandle:
 
 
 def load_sd3_turbo(
-    model_id: str = "stabilityai/stable-diffusion-3-turbo",
+    model_id: str = "",
     dtype: torch.dtype = torch.bfloat16,
     device: str = "cuda",
 ):

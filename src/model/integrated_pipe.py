@@ -36,7 +36,7 @@ class GenerationConfig:
 class IntegratedT2VPipe:
     def __init__(
         self,
-        backbone_id: str = "stabilityai/stable-diffusion-3-turbo",
+        backbone_id: str = "",
         motion_channels: int = 320,
         motion_layers: int = 4,
         heads: int = 8,

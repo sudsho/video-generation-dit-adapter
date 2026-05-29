@@ -1,10 +1,12 @@
 """
-Frechet Video Distance (FVD) using the I3D feature extractor.
+DRAFT Frechet-distance harness.
 
-We rely on an I3D checkpoint (Kinetics-pretrained). If the checkpoint is not
-present locally we fall back to a random-projection surrogate that at least
-gives comparable numbers under matched pipelines (dev-time convenience, not
-a substitute for real FVD).
+No I3D checkpoint is bundled with this repo, and there is no code path
+that fetches one. Without a real feature extractor the class falls back
+to a random-projection surrogate that is NOT FVD and should not be
+reported as such. Also note _sqrtm_psd symmetrizes sigma1 @ sigma2 before
+eigendecomposition, which is an approximation of the true matrix square
+root; use scipy.linalg.sqrtm for a correct FVD implementation.
 """
 from __future__ import annotations
 

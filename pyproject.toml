@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "video-generation-dit-adapter"
 version = "0.1.0"
-description = "AnimateDiff-style motion module over SD3-Turbo for short text-to-video with per-style LoRA."
+description = "Architectural sketch for an AnimateDiff-style temporal motion module intended to sit on top of a frozen image diffusion transformer."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }

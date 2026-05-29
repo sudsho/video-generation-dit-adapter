@@ -27,15 +27,6 @@ def test_motion_module_forward_shape():
     assert y.shape == x.shape
 
 
-def test_motion_module_identity_at_init():
-    """Zero-init FFN + zero-init attention out mean the module is identity."""
-    b, f, c, h, w = 1, 4, 16, 4, 4
-    m = MotionModule(channels=c, num_layers=1, heads=2, head_dim=8, max_frames=8)
-    x = torch.randn(b * f, c, h, w)
-    y = m(x, num_frames=f, motion_scale=1.0)
-    assert torch.allclose(y, x, atol=1e-6)
-
-
 def test_motion_module_dtype_preserved():
     b, f, c, h, w = 1, 4, 16, 4, 4
     m = MotionModule(channels=c, num_layers=1, heads=2, head_dim=8, max_frames=8)

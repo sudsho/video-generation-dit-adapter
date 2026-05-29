@@ -1,35 +1,41 @@
 # Motion module notes
 
-Design decisions and their tradeoffs.
+Design notes and their intended tradeoffs. This is scaffold-level
+documentation; nothing here has been validated against a real backbone
+training run.
 
 ## Why temporal-only attention (not full 3D)?
 
-Full spatial-temporal attention would be O((F*H*W)^2). At 48 frames * 64 * 64
-that's 12.6B pairs per head. Way too much. Temporal-only pays O(F^2) per pixel
-which is manageable and matches what AnimateDiff and Stable Video Diffusion
-converged on.
+Full spatial-temporal attention is O((F*H*W)^2). For a 48-frame, 64x64
+latent grid that is on the order of billions of pairs per head. Temporal
+only pays O(F^2) per pixel which is manageable and matches what
+AnimateDiff and similar architectures use.
 
-## Why zero-init the output projections?
+## Zero initialization
 
-SD3-Turbo is a step-distilled model. Any random perturbation of its residual
-stream at step 0 wrecks the distillation and produces mush. Zero-init means
-step 0 is bit-identical to the base image model, and the motion module
-learns from a good starting point.
+The output projections of the temporal attention block and the final FFN
+linear are zero initialized. Note the caveat in `docs/method.md`: because
+the sinusoidal frame position embedding is added into the pre attention
+tensor, the module is not strictly identity at init when
+`motion_scale != 0`. That's a bug to fix (either delay the pos embed, or
+warmup `motion_scale`) if strict identity-at-init is required.
 
-## Why hook every N blocks instead of all blocks?
+## Hook density (intended)
 
-Motion coherence saturates around 3-4 hook points in SD3-Turbo (24 blocks).
-More hook points = more params to train and more VRAM, without matching FVD
-improvement. `every_n_blocks=6` gives 4 hook points which is our default.
+Hooking every N transformer blocks instead of every block would be a knob
+to trade quality against parameter count and VRAM. No ablation has been
+run in this repo.
 
-## Why sinusoidal positions instead of learned?
+## Sinusoidal positions
 
-Learned frame positions locked in a fixed max frame count. Sinusoidal
-generalizes to any frame count up to `max_frames`, so the same trained
-motion module can produce 24-frame or 96-frame clips at inference.
+Sinusoidal frame positions generalize to any frame count up to the
+buffered `max_frames`; the module also regenerates the buffer on demand
+for longer clips (note this reassignment mutates the module and is not
+side effect free for subsequent smaller-frame calls).
 
-## Params
+## Parameter count (measured, default config)
 
-Default: 4 temporal layers, 8 heads, head_dim=40 -> ~30M params. That's
-about 1.5% of the SD3-Turbo transformer, and it's the only trainable part
-of the network for motion training.
+With `channels=320, num_layers=4, heads=8, head_dim=40`, `MotionModule`
+instantiates roughly 2.46M parameters. Any larger number in earlier drafts
+of these notes was aspirational and did not correspond to the shipped
+default.

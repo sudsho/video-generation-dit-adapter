@@ -1,41 +1,53 @@
-# Method
+# Method (sketch)
+
+This document describes the intended shape of the pipeline. Nothing in the
+repo is a verified end-to-end training or inference run. Treat this as
+design notes, not a reproduction guide.
 
 ## Overview
 
-We take an SD3-Turbo backbone (spatial DiT for images) and extend it to short
-video by inserting **temporal attention** modules between selected transformer
-blocks. The spatial DiT stays frozen; only the motion module trains. Style
-comes from per-style LoRA adapters injected into the DiT attention projections.
+Take a spatial diffusion transformer (DiT) intended for images and extend
+it to short video by inserting temporal attention modules between selected
+transformer blocks. The spatial DiT would stay frozen; only the motion
+module trains. Style would come from per-style LoRA adapters injected into
+the DiT attention projections.
 
 ## Motion Module
 
-For each hooked block, the residual stream shape is
-`(B * F, seq, C)`. We reshape to `(B * seq, F, C)` and run a stack of
-temporal attention + FFN over the frame axis. Then reshape back and mix
-into the block output with `motion_scale * (temporal_out - x)`.
+For each hooked block, the residual stream has shape `(B * F, seq, C)`
+where F is the number of frames. We reshape to `(B * seq, F, C)` and run a
+stack of temporal attention + FFN over the frame axis, then reshape back
+and mix into the block output with `motion_scale * (temporal_out - x)`.
 
-At `motion_scale = 0` the module is a no-op (useful for image ablations).
-At init, the output projections are zero-initialized, so the pretrained
-image backbone is preserved exactly on step 0. This is important for
-SD3-Turbo, whose one-step distillation degrades if you perturb the weights.
+At `motion_scale = 0` the residual mix vanishes (useful as an ablation
+lever). The output projections of the temporal attention block and the
+final FFN linear are zero initialized; note however that the sinusoidal
+frame position embedding is added into the pre attention tensor, so the
+module is NOT numerically identity at initialization when
+`motion_scale != 0`. That would need to be fixed (either move the pos
+embed after the zero init projection, or start `motion_scale` at 0 during
+warmup) before any claim about "step 0 = pretrained backbone" is true.
 
-## Training
+## Training (draft)
 
-Loss is standard flow-matching MSE against the added noise, over per-frame
-latents from the SD3 VAE. We share one timestep per clip across frames.
+The intended loss depends on the backbone's parameterization: an
+epsilon-prediction backbone would take an MSE against the sampled noise;
+a rectified-flow / velocity-prediction backbone (e.g. SD3) would take an
+MSE against `(noise - latents)`. The training script in
+`src/train/train_motion.py` uses MSE against the sampled noise as a
+placeholder and has NOT been reconciled against the actual scheduler /
+`encode_prompt` / transformer forward signatures of any specific released
+pipeline. Do not treat it as runnable.
 
-The DiT stays frozen; only the motion module receives gradients (~30M params).
-LoRA style adapters can be trained on top afterwards, freezing motion.
+## Data (intended)
 
-## Data
+A WebVid-style manifest of (video, caption, start_sec, end_sec) tuples,
+trimmed to 48 frames at 12 fps (4 seconds) at 512x512, with clip-consistent
+color jitter.
 
-We use a WebVid-style manifest of (video, caption, start_sec, end_sec)
-tuples. Clips are trimmed to 48 frames at 12 fps (4 seconds) at 512x512.
-Color and speed jitter are applied clip-consistently.
+## Inference (intended)
 
-## Inference
-
-SD3-Turbo runs at 6 steps by default. Per-frame inference is done in
-parallel over the frame axis, then the motion hooks run once per block
-per denoising step. On a single H100, 4-second 512x512 clips generate in
-about 3.5 seconds end-to-end (see docs/latency_and_vram.md).
+Per-frame inference in parallel over the frame axis, with the motion hooks
+run once per block per denoising step. The `src/inference/t2v.py` CLI is a
+draft; it will not produce a real clip without a working pipeline and a
+trained motion checkpoint neither of which is in this repo.

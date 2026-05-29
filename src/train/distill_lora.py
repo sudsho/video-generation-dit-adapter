@@ -1,10 +1,12 @@
 """
-Per-style LoRA distillation. Freeze the SD3 backbone and motion module,
-train LoRA adapters into the DiT so a small delta rank rewrites style.
+DRAFT per-style LoRA trainer for the DiT attention projections. Not
+verified end to end.
 
-Distillation objective: match the frozen teacher's frame trajectory on a
-small style-specific clip set (~200-2000 clips). Loss = student - teacher
-MSE on the predicted noise, with LoRA-only trainable parameters.
+The current loss is plain MSE against sampled noise (no teacher forward,
+no distillation objective is actually implemented despite the file name).
+`peft` is imported at runtime and is not declared in requirements.txt.
+The save path here (save_pretrained(out/'lora')) also does not match the
+load path in src/inference/t2v.py. See the top level README for status.
 """
 from __future__ import annotations
 

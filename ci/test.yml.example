@@ -1,4 +1,3 @@
-# github actions example; move to .github/workflows/test.yml to activate.
 name: test
 
 on:

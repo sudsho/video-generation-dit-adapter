@@ -1,6 +1,8 @@
-# base config for motion adapter training
+# base config for motion adapter training (draft; not verified end-to-end).
+# `backbone` is a placeholder - pick a real diffusers-compatible id and
+# reconcile hook code against it before treating this config as usable.
 seed: 1729
-backbone: stabilityai/stable-diffusion-3-turbo
+backbone: null
 resolution: 512
 num_frames: 48        # 4s * 12fps
 fps: 12

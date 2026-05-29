@@ -80,10 +80,9 @@ def health():
 @app.get("/info")
 def info():
     return {
-        "backbone": "stabilityai/stable-diffusion-3-turbo",
+        "status": "scaffold - not wired to a real backbone",
         "resolution": 512,
         "max_duration_s": 8.0,
-        "styles": ["anime", "cinematic"],
     }
 
 

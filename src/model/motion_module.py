@@ -66,9 +66,11 @@ class MotionModule(nn.Module):
     """
     A stack of temporal attention blocks + FFN, applied to (B*F, C, H, W) latents.
 
-    Zero-initialized output projection so that at init the block is an identity
-    perturbation of the spatial backbone. Standard trick, keeps SD3-Turbo sane
-    before any training happens.
+    Output projections of the attention blocks and of the final FFN linear
+    are zero initialized. Note: the sinusoidal frame position embedding is
+    added before the attention stack, so the module is not strictly
+    identity at init when motion_scale != 0; use motion_scale=0 for a true
+    passthrough.
     """
 
     def __init__(

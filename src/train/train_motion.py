@@ -1,8 +1,11 @@
 """
-Train the motion module on top of a frozen SD3-Turbo backbone.
+DRAFT motion module trainer. Not verified end to end.
 
-Standard v-prediction / flow-matching loss over the latent video sequence.
-The backbone stays frozen; only the motion adapter parameters receive gradients.
+Known gaps: the scheduler.add_noise / pipe.encode_prompt / transformer
+forward calls below have not been reconciled against the actual method
+signatures of a specific released diffusion pipeline; the plain MSE
+against sampled noise here is not the correct target for a rectified-flow
+backbone. See the top level README for status.
 """
 from __future__ import annotations
 

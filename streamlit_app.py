@@ -7,8 +7,8 @@ import tempfile
 import streamlit as st
 
 st.set_page_config(page_title="video-motion-adapter", layout="centered")
-st.title("text -> short video")
-st.caption("SD3-Turbo + AnimateDiff-style motion module. 4s @ 12fps, 512x512.")
+st.title("text -> short video (scaffold)")
+st.caption("Draft UI. The underlying pipeline is not wired to a real backbone in this repo; see the README.")
 
 prompt = st.text_area("prompt", value="a cat surfing on a rainbow, cinematic")
 style = st.selectbox("style", options=["(none)", "anime", "cinematic"], index=0)
@@ -27,7 +27,7 @@ if st.button("generate", type="primary"):
 
     tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
     tmp.close()
-    with st.spinner("rendering... (SD3-Turbo does 6 diffusion steps per frame)"):
+    with st.spinner("rendering..."):
         run_single(
             prompt=prompt,
             out_path=tmp.name,
