@@ -1,7 +1,10 @@
-.PHONY: install test lint train distill-anime distill-cinematic api streamlit docker docker-up docker-down clean
+.PHONY: install smoke test lint train distill-anime distill-cinematic api streamlit docker docker-up docker-down clean
 
 install:
 	pip install -r requirements.txt
+
+smoke:
+	python -m src.smoke_cpu
 
 test:
 	pytest -q
